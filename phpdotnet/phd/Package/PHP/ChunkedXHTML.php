@@ -21,9 +21,11 @@ class Package_PHP_ChunkedXHTML extends Package_PHP_Web {
     {
         $sdesc = $this->indexes[$id]['sdesc'] ?? '';
         $ldesc = $this->indexes[$id]['ldesc'] ?? '';
-        return ($sdesc && $ldesc && $sdesc !== $ldesc)
-            ? "$sdesc — $ldesc"
-            : Format::getShortDescription($id);
+        if ($sdesc && $ldesc && $sdesc !== $ldesc) {
+            return "$sdesc — $ldesc";
+        }
+
+        return Format::getShortDescription($id) ?? '';
     }
 
     protected function headerNav($id): string
