@@ -17,6 +17,15 @@ class Package_PHP_ChunkedXHTML extends Package_PHP_Web {
         parent::__destruct();
     }
 
+    protected function pageTitle($id): string
+    {
+        $sdesc = $this->indexes[$id]['sdesc'] ?? '';
+        $ldesc = $this->indexes[$id]['ldesc'] ?? '';
+        return ($sdesc && $ldesc && $sdesc !== $ldesc)
+            ? "$sdesc — $ldesc"
+            : Format::getShortDescription($id);
+    }
+
     protected function headerNav($id): string
     {
         // https://feathericons.com search
@@ -78,22 +87,20 @@ class Package_PHP_ChunkedXHTML extends Package_PHP_Web {
 
     protected function headerCrumbs($id): string
     {
-        $title = Format::getLongDescription($id);
+        $title = $this->pageTitle($id);
         $upLink = '';
-        if ($parentId = Format::getParent($id)) {
+        $parentId = $id;
+        while ($parentId = Format::getParent($parentId)) {
             $up = array(
                 "href" => $this->getFilename($parentId) . $this->getExt(),
                 "desc" => $this->getShortDescription($parentId),
             );
-            if ($up['href'] != 'index.html') {
-                $upLink = "<li><a href=\"{$up["href"]}\">{$up["desc"]}</a></li>";
-            }
+            $upLink = "<li><a href=\"{$up["href"]}\">{$up["desc"]}</a></li>" . $upLink;
         }
 
         return <<<HTML
             <div id="breadcrumbs" class="clearfix">
               <ul class="breadcrumbs-container">
-                <li><a href="index.html">PHP Manual</a></li>
                 {$upLink}
                 <li>{$title}</li>
               </ul>
@@ -102,14 +109,15 @@ class Package_PHP_ChunkedXHTML extends Package_PHP_Web {
     }
 
     public function header($id) {
-        $title = Format::getLongDescription($id);
+        $title = $this->pageTitle($id);
+        $onlinePage = 'https://www.php.net/manual/'.$this->config->language.'/'.$id.'.php';
         static $cssLinks = null;
         if ($cssLinks === null) {
             $cssLinks = $this->createCSSLinks();
         }
         $header = <<<HTML
             <!DOCTYPE HTML>
-            <html>
+            <html><!-- Online page at $onlinePage -->
              <head>
               <meta http-equiv="content-type" content="text/html; charset=UTF-8">
               <style>

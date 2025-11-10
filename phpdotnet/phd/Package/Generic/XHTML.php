@@ -689,7 +689,14 @@ abstract class Package_Generic_XHTML extends Format_Abstract_XHTML {
             $basename = basename($css);
             $dest = md5(substr($css, 0, -strlen($basename))) . '-' . $basename;
             if (@copy($css, $stylesDir . $dest)) {
-                $this->stylesheets[] = $dest;
+                // Change file name to include hash of the file contents instead of the file path
+                $oldPath = $stylesDir . $dest;
+                $dest = substr(md5_file($oldPath), 0, 8) . '-' . $basename;
+                if (rename($oldPath, $stylesDir . $dest)) {
+                    $this->stylesheets[] = $dest;
+                } else {
+                    trigger_error(vsprintf('Impossible to rename the %s file.', [$oldPath]), E_USER_WARNING);
+                }
             } else {
                 trigger_error(vsprintf('Impossible to copy the %s file.', [$css]), E_USER_WARNING);
             }
